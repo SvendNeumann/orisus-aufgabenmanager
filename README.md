@@ -2,15 +2,21 @@
 
 Mobile-first MVP für interne Aufgaben, Checklisten, Nachweise und Vertretungen der **Zahnmedizin Westpfalz MVZ**.
 
-Diese App-Instanz ist zunächst ausschließlich für die drei Standorte gedacht:
+Diese App-Instanz ist ausschließlich für die drei Standorte der Zahnmedizin Westpfalz MVZ gedacht:
 
 - Ulmet
-- Lauterecken
 - Landstuhl
-
-Andere MVZs oder Standorte wie Kehl, Kirchberg oder Kassel sollen später eigene, separate App-Instanzen erhalten.
+- Lauterecken
 
 Die App ist ein Testsystem mit Dummy-Daten. Es dürfen keine echten Patientendaten verwendet werden.
+
+## Instanzmodell
+
+Diese App ist keine gruppenweite Multi-Tenant-Plattform.
+
+Für jedes MVZ wird später eine eigene, vollständig getrennte Instanz betrieben. Jede Instanz hat eine eigene Datenbank, eigene Benutzer, eigene Aufgaben, eigene Checklisten, eigene Nachweise und eine eigene Historie.
+
+Die gemeinsame Grundlage ist nur die Softwarebasis, nicht die Daten. Es gibt in dieser Version keine zentrale Mandantenverwaltung, keine gemeinsame Datenbank für mehrere MVZ, keinen Gruppenadmin und keine technische Trennung über `tenant_id` oder `mvz_id`.
 
 ## Tech Stack
 
@@ -71,7 +77,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 npm run seed
 ```
 
-Das Seed-Script legt nur die drei Standorte Ulmet, Lauterecken und Landstuhl aktiv an. Alte Teststandorte außerhalb der Zahnmedizin Westpfalz MVZ werden deaktiviert.
+Das Seed-Script legt nur die drei Standorte Ulmet, Landstuhl und Lauterecken aktiv an. Standorte außerhalb dieser Instanz werden deaktiviert.
 
 Dummy-PINs:
 
