@@ -8,8 +8,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
   const db = supabaseAdmin();
 
   if (db) {
-    await db.from("task_occurrences").delete().or(`id.eq.${params.id},task_id.eq.${taskId}`);
-    await db.from("tasks").delete().eq("id", taskId);
+    await db.from("tasks").update({ active: false }).eq("id", taskId);
+    await db.from("task_occurrences").update({ status: "rejected" }).or(`id.eq.${params.id},task_id.eq.${taskId}`).neq("status", "completed");
   }
 
   return NextResponse.redirect(new URL("/admin/tasks", request.url));
