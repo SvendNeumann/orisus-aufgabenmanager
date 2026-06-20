@@ -62,14 +62,14 @@ export async function getAdminChecklistRows() {
   const ids = data.map((row) => row.id);
   const checklistIds = data.map((row: any) => (Array.isArray(row.checklists) ? row.checklists[0] : row.checklists)?.id).filter(Boolean);
   const [{ data: items }, { data: completions }] = await Promise.all([
-    db.from("checklist_items").select("id, checklist_id").in("checklist_id", checklistIds).eq("active", true),
+    db.from("checklist_items").select("id, checklist_id, title, proof_type, sort_order").in("checklist_id", checklistIds).eq("active", true).order("sort_order"),
     db.from("checklist_item_completions").select("checklist_occurrence_id, checklist_item_id").in("checklist_occurrence_id", ids)
   ]);
   return data.map((row: any) => {
     const check = Array.isArray(row.checklists) ? row.checklists[0] : row.checklists;
     const checkItems = (items || []).filter((item) => item.checklist_id === check?.id);
     const done = (completions || []).filter((item) => item.checklist_occurrence_id === row.id);
-    return { id: row.id, checklist_id: check?.id || row.checklist_id, name: check?.name || "Checkliste", location_id: row.location_id, status: row.status, due_at: row.due_at, due_time: check?.due_time || "", interval_type: check?.interval_type || "daily", completed_count: done.length, total_count: checkItems.length };
+    return { id: row.id, checklist_id: check?.id || row.checklist_id, name: check?.name || "Checkliste", location_id: row.location_id, status: row.status, due_at: row.due_at, due_time: check?.due_time || "", interval_type: check?.interval_type || "daily", completed_count: done.length, total_count: checkItems.length, items: checkItems };
   });
 }
 

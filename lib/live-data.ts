@@ -79,11 +79,10 @@ async function ensureEveningChecklists() {
   const checklistIds = (eveningChecks || []).map((check) => check.id);
   if (checklistIds.length === 0) return;
 
-  const { data: existingItems } = await db.from("checklist_items").select("checklist_id, title").eq("active", true).in("checklist_id", checklistIds);
-  const itemKeys = new Set((existingItems || []).map((item) => `${item.checklist_id}:${item.title}`));
+  const { data: existingItems } = await db.from("checklist_items").select("checklist_id").eq("active", true).in("checklist_id", checklistIds);
+  const checklistsWithItems = new Set((existingItems || []).map((item) => item.checklist_id));
   const missingItems = (eveningChecks || []).flatMap((check) =>
-    EVENING_CHECK_TITLES.map((title, index) => ({ checklist_id: check.id, title, sort_order: index + 1, proof_type: "photo", photo_required: true, active: true }))
-      .filter((item) => !itemKeys.has(`${item.checklist_id}:${item.title}`))
+    checklistsWithItems.has(check.id) ? [] : EVENING_CHECK_TITLES.map((title, index) => ({ checklist_id: check.id, title, sort_order: index + 1, proof_type: "photo", photo_required: true, active: true }))
   );
 
   if (missingItems.length > 0) await db.from("checklist_items").insert(missingItems);
