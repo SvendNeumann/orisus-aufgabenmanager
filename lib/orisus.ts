@@ -57,7 +57,9 @@ export type ChecklistItem = {
   required: boolean;
 };
 
-export const locations = ["Verwaltung", "Ulmet", "Landstuhl", "Lauterecken", "Kehl", "Kirchberg", "Kassel"].map((name, index) => ({
+const allowedLocationNames = ["Ulmet", "Lauterecken", "Landstuhl"];
+
+export const locations = allowedLocationNames.map((name, index) => ({
   id: `loc-${index + 1}`,
   name,
   active: true
@@ -73,7 +75,7 @@ export const demoPins: Record<string, string> = {
 };
 
 export const employees: Employee[] = [
-  employee("emp-svend", "Svend Neumann", "Svend", "Verwaltung", "Admin", "admin"),
+  employee("emp-svend", "Svend Neumann", "Svend", "Ulmet", "Admin", "admin"),
   employee("emp-jennifer", "Jennifer Meirich", "Jennifer", "Ulmet", "Standortleitung", "employee"),
   employee("emp-anika", "Anika Lützelberger", "Anika", "Ulmet", "ZMP", "employee"),
   employee("emp-jenny", "Jenny Beispiel", "Jenny", "Ulmet", "ZFA", "employee"),
@@ -94,21 +96,26 @@ export const tasks: TaskOccurrence[] = [
   task("t10", "Laborversand vorbereiten", "Labor", "emp-jenny", "13:00", "photo"),
   task("t11", "Tagesplan prüfen", "Behandlung", "emp-hangx", "07:30", "none"),
   task("t12", "Offene Heil- und Kostenpläne prüfen", "Abrechnung", "emp-hangx", "14:00", "text", null, "open", "weekly"),
-  task("t13", "Rückfragen aus KFO-Fällen prüfen", "KFO", "emp-hangx", "14:00", "text", null, "open", "weekly")
+  task("t13", "Rückfragen aus KFO-Fällen prüfen", "KFO", "emp-hangx", "14:00", "text", null, "open", "weekly"),
+  task("t14", "Tagesabschluss Landstuhl prüfen", "Organisation", "emp-max", "18:00", "none")
 ];
 
 export const checklists: ChecklistOccurrence[] = [
-  checklist("c1", "Morgencheck", "08:00", "in_progress"),
-  checklist("c2", "Abendcheck", "18:30", "open"),
-  checklist("c3", "Wochencheck", "16:00", "completed", "weekly"),
-  checklist("c4", "Monatscheck", "12:00", "open", "monthly")
+  checklist("c1", "Morgencheck Ulmet", "Ulmet", "08:00", "in_progress"),
+  checklist("c2", "Abendcheck Ulmet", "Ulmet", "18:30", "open"),
+  checklist("c3", "Wochencheck Ulmet", "Ulmet", "16:00", "completed", "weekly"),
+  checklist("c4", "Monatscheck Ulmet", "Ulmet", "12:00", "open", "monthly"),
+  checklist("c5", "Morgencheck Lauterecken", "Lauterecken", "08:00", "open"),
+  checklist("c6", "Morgencheck Landstuhl", "Landstuhl", "08:00", "open")
 ];
 
 export const checklistItems: ChecklistItem[] = [
   ...items("c1", ["Steri gestartet", "Behandlungszimmer kontrolliert", "EC-Terminal geprüft", "Terminbuch geprüft", "Wartezimmer ordentlich"]),
   ...items("c2", ["Rohre spülen", "Zimmer 1 aufräumen", "Zimmer 2 aufräumen", "Zimmer 3 aufräumen", "Schränke auffüllen", "Steri ausschalten", "Müll entsorgen", "Alarmanlage aktivieren"]),
   ...items("c3", ["Notfallkoffer geprüft", "Medikamentenbestand geprüft", "Lagerbestand kontrolliert", "Verbrauchsmaterial nachbestellt"]),
-  ...items("c4", ["Kühlschrank Grundreinigung dokumentiert", "Lagerinventur durchgeführt", "QM-Unterlagen kontrolliert", "Feuerlöscher Sichtprüfung dokumentiert"])
+  ...items("c4", ["Kühlschrank Grundreinigung dokumentiert", "Lagerinventur durchgeführt", "QM-Unterlagen kontrolliert", "Feuerlöscher Sichtprüfung dokumentiert"]),
+  ...items("c5", ["Behandlungszimmer kontrolliert", "Terminbuch geprüft", "Wartezimmer ordentlich"]),
+  ...items("c6", ["Behandlungszimmer kontrolliert", "Terminbuch geprüft", "Wartezimmer ordentlich"])
 ];
 
 export const delegations = [
@@ -121,12 +128,12 @@ function employee(id: string, display_name: string, first_name: string, location
 }
 
 function task(id: string, title: string, area: string, employeeId: string, due_time: string, proof_type: TaskOccurrence["proof_type"], value_unit: string | null = null, status: Status = "open", interval_type: TaskOccurrence["interval_type"] = "daily"): TaskOccurrence {
-  const employee = employees.find((item) => item.id === employeeId)!;
-  return { id, task_id: id, title, description: `${title} sauber dokumentieren und bei Auffälligkeiten kommentieren.`, area, location_id: employee.location_id, assigned_employee_id: employeeId, original_employee_id: employeeId, status, due_time, proof_type, value_unit, interval_type, completed_at: status === "completed" ? new Date().toISOString() : null };
+  const assignedEmployee = employees.find((item) => item.id === employeeId)!;
+  return { id, task_id: id, title, description: `${title} sauber dokumentieren und bei Auffälligkeiten kommentieren.`, area, location_id: assignedEmployee.location_id, assigned_employee_id: employeeId, original_employee_id: employeeId, status, due_time, proof_type, value_unit, interval_type, completed_at: status === "completed" ? new Date().toISOString() : null };
 }
 
-function checklist(id: string, name: string, due_time: string, status: Status, interval_type: ChecklistOccurrence["interval_type"] = "daily"): ChecklistOccurrence {
-  return { id, name, location_id: locations.find((item) => item.name === "Ulmet")!.id, status, due_time, interval_type };
+function checklist(id: string, name: string, locationName: string, due_time: string, status: Status, interval_type: ChecklistOccurrence["interval_type"] = "daily"): ChecklistOccurrence {
+  return { id, name, location_id: locations.find((item) => item.name === locationName)!.id, status, due_time, interval_type };
 }
 
 function items(checklist_id: string, names: string[]) {
@@ -164,8 +171,8 @@ export function tokenHash(token: string) {
   return crypto.createHmac("sha256", process.env.SESSION_SECRET || "dev-secret").update(token).digest("hex");
 }
 
-export function createDemoSessionValue(employee: Employee) {
-  return Buffer.from(JSON.stringify({ employee_id: employee.id, role: employee.role, demo: true })).toString("base64url");
+export function createDemoSessionValue(employeeRecord: Employee) {
+  return Buffer.from(JSON.stringify({ employee_id: employeeRecord.id, role: employeeRecord.role, demo: true })).toString("base64url");
 }
 
 function parseDemoSessionValue(value: string) {
@@ -186,12 +193,22 @@ function verifyDemoLogin(employeeId: string, pin: string) {
   return employees.find((item) => item.id === normalizedEmployeeId && item.active) || null;
 }
 
+export async function getLocations() {
+  const db = supabaseAdmin();
+  if (!db) return locations;
+  const { data, error } = await db.from("locations").select("*").eq("active", true).in("name", allowedLocationNames).order("name");
+  if (error || !data || data.length === 0) return locations;
+  return data;
+}
+
 export async function getEmployees() {
   const db = supabaseAdmin();
   if (!db) return employees;
   const { data, error } = await db.from("employees").select("*, locations(name)").eq("active", true).order("display_name");
   if (error || !data || data.length === 0) return employees;
-  return data.map((row: any) => ({ ...row, location_name: row.locations?.name || "" })) as Employee[];
+  return data
+    .map((row: any) => ({ ...row, location_name: row.locations?.name || "" }))
+    .filter((row: Employee) => allowedLocationNames.includes(row.location_name));
 }
 
 export async function verifyLogin(employeeId: string, pin: string) {
@@ -203,9 +220,11 @@ export async function verifyLogin(employeeId: string, pin: string) {
   if (!db) return demoEmployee;
   if (!/^\d{6}$/.test(normalizedPin)) return null;
 
-  const { data, error } = await db.from("employees").select("*").eq("id", normalizedEmployeeId).eq("active", true).single();
+  const { data, error } = await db.from("employees").select("*, locations(name)").eq("id", normalizedEmployeeId).eq("active", true).single();
   if (error || !data) return demoEmployee;
 
+  const locationName = (data as any).locations?.name || "";
+  if (!allowedLocationNames.includes(locationName)) return null;
   if (data.locked_until && new Date(data.locked_until) > new Date()) return null;
 
   const hasStoredHash = typeof data.pin_hash === "string" && data.pin_hash.length > 0;
@@ -217,7 +236,7 @@ export async function verifyLogin(employeeId: string, pin: string) {
   }
 
   await db.from("employees").update({ failed_login_attempts: 0, locked_until: null }).eq("id", normalizedEmployeeId);
-  return { ...data, location_name: data.location_name || "" } as Employee;
+  return { ...data, location_name: locationName } as Employee;
 }
 
 export async function currentUser(): Promise<Employee | null> {
@@ -231,8 +250,9 @@ export async function currentUser(): Promise<Employee | null> {
   if (!db) return null;
 
   const { data } = await db.from("sessions").select("employee_id, expires_at, employees(*, locations(name))").eq("token_hash", tokenHash(cookie)).gt("expires_at", new Date().toISOString()).single();
-  const employee: any = data?.employees;
-  return employee ? { ...employee, location_name: employee.locations?.name || "" } : null;
+  const employeeRecord: any = data?.employees;
+  const locationName = employeeRecord?.locations?.name || "";
+  return employeeRecord && allowedLocationNames.includes(locationName) ? { ...employeeRecord, location_name: locationName } : null;
 }
 
 export async function requireUser(role?: Role) {
@@ -250,6 +270,8 @@ export async function getAdminTasks() {
   const db = supabaseAdmin();
   if (!db) return tasks;
 
+  const locationRows = await getLocations();
+  const allowedIds = locationRows.map((location) => location.id);
   const { data, error } = await db.from("task_occurrences").select("id, task_id, status, completed_at, tasks(id, title, description, area, location_id, assigned_employee_id, interval_type, due_time, proof_type, value_unit)").order("due_at", { ascending: true });
   if (error || !data) return tasks;
 
@@ -271,7 +293,7 @@ export async function getAdminTasks() {
       value_unit: taskRow?.value_unit || null,
       completed_at: row.completed_at
     } as TaskOccurrence;
-  });
+  }).filter((row: TaskOccurrence) => allowedIds.includes(row.location_id));
 }
 
 export function checklistsFor(user: Employee) {
