@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createDemoSessionValue, hashPin, isDemoEmployeeId, sessionToken, supabaseAdmin, tokenHash } from "@/lib/orisus";
+import { hashPin, isDemoEmployeeId, sessionToken, supabaseAdmin, tokenHash } from "@/lib/orisus";
 import { INSTANCE_LOCATIONS } from "@/lib/instance";
 
 export async function POST(request: Request) {
@@ -27,16 +27,15 @@ export async function POST(request: Request) {
   await db.from("employees").update({ pin_hash: await hashPin(pin), failed_login_attempts: 0, locked_until: null }).eq("id", employeeId);
 
   const expires = new Date(Date.now() + 1000 * 60 * 60 * 12);
-  const employee = { ...data, pin_hash: undefined, location_name: locationName } as any;
-  const token = isDemoEmployeeId(employee.id) ? createDemoSessionValue(employee) : sessionToken();
+  const token = sessionToken();
 
   await db.from("sessions").insert({
-    employee_id: employee.id,
+    employee_id: data.id,
     token_hash: tokenHash(token),
     expires_at: expires.toISOString()
   });
 
-  const response = NextResponse.redirect(new URL(employee.role === "admin" ? "/admin" : "/app", request.url));
+  const response = NextResponse.redirect(new URL(data.role === "admin" ? "/admin" : "/app", request.url));
   response.cookies.set("orisus_session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
