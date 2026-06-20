@@ -19,10 +19,12 @@ create table if not exists employees (
   active boolean default true,
   failed_login_attempts integer default 0,
   locked_until timestamptz null,
+  last_login_at timestamptz null,
   created_at timestamptz default now()
 );
 
 alter table employees alter column pin_hash drop not null;
+alter table employees add column if not exists last_login_at timestamptz null;
 
 create table if not exists sessions (
   id uuid primary key default gen_random_uuid(),
