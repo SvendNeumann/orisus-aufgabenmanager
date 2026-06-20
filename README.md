@@ -1,6 +1,14 @@
 # ORISUS Aufgabenmanager
 
-Mobile-first MVP für interne Aufgaben, Checklisten, Nachweise und Vertretungen an Orisus-Standorten.
+Mobile-first MVP für interne Aufgaben, Checklisten, Nachweise und Vertretungen der **Zahnmedizin Westpfalz MVZ**.
+
+Diese App-Instanz ist zunächst ausschließlich für die drei Standorte gedacht:
+
+- Ulmet
+- Lauterecken
+- Landstuhl
+
+Andere MVZs oder Standorte wie Kehl, Kirchberg oder Kassel sollen später eigene, separate App-Instanzen erhalten.
 
 Die App ist ein Testsystem mit Dummy-Daten. Es dürfen keine echten Patientendaten verwendet werden.
 
@@ -63,6 +71,8 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 npm run seed
 ```
 
+Das Seed-Script legt nur die drei Standorte Ulmet, Lauterecken und Landstuhl aktiv an. Alte Teststandorte außerhalb der Zahnmedizin Westpfalz MVZ werden deaktiviert.
+
 Dummy-PINs:
 
 - Svend Neumann: `111111`
@@ -80,7 +90,7 @@ Die PINs werden durch das Seed-Script gehasht gespeichert.
 npm run dev
 ```
 
-Ohne Supabase-Konfiguration läuft die App mit lokalen Demo-Daten. Schreibaktionen werden dann nur simuliert. Mit Supabase-Konfiguration werden Sessions, PIN-Login, Aufgaben, Checklisten, Vertretungen und PIN-Reset gegen die Datenbank ausgeführt.
+Ohne Supabase-Konfiguration läuft die App mit lokalen Demo-Daten. Schreibaktionen werden dann nur simuliert. Mit Supabase-Konfiguration werden Sessions, PIN-Login, Aufgaben, Checklisten, Mitarbeiterverwaltung, Vertretungen und PIN-Reset gegen die Datenbank ausgeführt.
 
 ## Deployment auf Vercel
 
