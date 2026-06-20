@@ -1,11 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { INSTANCE_LOCATIONS } from "@/lib/instance";
-import { requireUser, supabaseAdmin } from "@/lib/orisus";
-
-function canAssignOneTimeTasks(user: { role: string; function_title?: string | null }) {
-  return user.role === "admin" || String(user.function_title || "").toLowerCase().includes("standortleitung");
-}
+import { canUseAdminArea, homePathFor, requireUser, supabaseAdmin } from "@/lib/orisus";
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10);
@@ -21,8 +17,8 @@ function dueAt(date: string, time: string) {
 
 export async function POST(request: Request) {
   const user = await requireUser();
-  if (!canAssignOneTimeTasks(user)) {
-    return NextResponse.redirect(new URL(user.role === "admin" ? "/admin/tasks?error=unauthorized" : "/app/more?error=unauthorized", request.url));
+  if (!canUseAdminArea(user)) {
+    return NextResponse.redirect(new URL(`${homePathFor(user)}?error=unauthorized`, request.url));
   }
 
   const form = await request.formData();
@@ -32,7 +28,7 @@ export async function POST(request: Request) {
   const dueDate = String(form.get("due_date") || todayISO()).trim() || todayISO();
   const dueTime = String(form.get("due_time") || "").trim();
   const proofType = String(form.get("proof_type") || "none").trim();
-  const returnTo = String(form.get("return_to") || (user.role === "admin" ? "/admin/tasks" : "/app/more"));
+  const returnTo = String(form.get("return_to") || "/admin/tasks");
   const db = supabaseAdmin();
 
   if (!db || !title || !employeeId) {
@@ -44,10 +40,6 @@ export async function POST(request: Request) {
 
   if (!target || !INSTANCE_LOCATIONS.includes(locationName || "")) {
     return NextResponse.redirect(new URL(`${returnTo}?error=target`, request.url));
-  }
-
-  if (user.role !== "admin" && target.location_id !== user.location_id) {
-    return NextResponse.redirect(new URL(`${returnTo}?error=location`, request.url));
   }
 
   const { data: task } = await db.from("tasks").insert({
