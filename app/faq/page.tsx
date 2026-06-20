@@ -1,10 +1,13 @@
 import { ButtonLink, Card, Page } from "@/components/ui";
+import { INSTANCE_LOCATIONS, INSTANCE_NAME } from "@/lib/instance";
+
+const locationLabel = INSTANCE_LOCATIONS.join(", ");
 
 const sections = [
   {
     title: "Kurz erklärt",
     items: [
-      ["Wofür ist die App gedacht?", "Der ORISUS Aufgabenmanager hilft dem Team der Zahnmedizin Westpfalz MVZ, wiederkehrende Praxisaufgaben an den Standorten Ulmet, Lauterecken und Landstuhl zuverlässig zu erledigen. Dazu gehören tägliche Aufgaben, Wochenaufgaben, Monatsaufgaben und Standort-Checklisten."],
+      ["Wofür ist die App gedacht?", `Der ORISUS Aufgabenmanager hilft dem Team der ${INSTANCE_NAME}, wiederkehrende Praxisaufgaben an den Standorten ${locationLabel} zuverlässig zu erledigen. Dazu gehören tägliche Aufgaben, Wochenaufgaben, Monatsaufgaben und Standort-Checklisten.`],
       ["Was ist das Ziel?", "Wichtige Abläufe sollen klar sichtbar sein, pünktlich erledigt werden und später nachvollziehbar bleiben. Die App ersetzt lose Zettel, mündliche Zurufe und unklare Zuständigkeiten durch eine einfache digitale Übersicht."],
       ["Ist das schon ein Produktivsystem?", "Nein. Diese Version ist zunächst ein MVP/Testsystem. Sie dient dazu, Abläufe, Bedienung, Aufgabenstruktur und Zuständigkeiten zu testen, bevor echte Produktivdaten genutzt werden."]
     ]
@@ -82,7 +85,7 @@ const sections = [
       ["Was kann ein Admin sehen?", "Admins können alle Standorte, Mitarbeiter, Aufgaben, Checklisten, Erledigungen, Nachweise, Fotos und Vertretungen sehen und verwalten."],
       ["Warum sieht ein Admin mehr?", "Admins brauchen die standortübergreifende Übersicht, um offene und überfällige Aufgaben, Nachweise, Mitarbeiterverwaltung und Qualitätssicherung zu steuern."],
       ["Kann ein Mitarbeiter Aufgaben für andere Standorte sehen?", "Nein. Im vorgesehenen Betrieb sehen Mitarbeitende nur Inhalte des eigenen Standorts und eigene persönliche Aufgaben."],
-      ["Welche Standorte gehören zu dieser App?", "Diese App ist zunächst nur für Zahnmedizin Westpfalz MVZ mit Ulmet, Lauterecken und Landstuhl gedacht. Andere MVZs sollen später getrennte App-Instanzen erhalten."]
+      ["Welche Standorte gehören zu dieser App?", `Diese App ist nur für ${INSTANCE_NAME} mit den Standorten ${locationLabel} gedacht. Andere MVZs erhalten eigene, vollständig getrennte App-Instanzen.`]
     ]
   },
   {
@@ -99,5 +102,5 @@ const sections = [
 ];
 
 export default function PublicFaqPage() {
-  return <Page title="FAQ & Nutzung" subtitle="Ausführliche Anleitung für Mitarbeitende vor dem Login."><div className="mb-5 flex flex-col gap-3 sm:flex-row"><ButtonLink href="/login">App starten</ButtonLink><ButtonLink href="/" secondary>Zur Startseite</ButtonLink></div><div className="space-y-6">{sections.map((section) => <section key={section.title}><h2 className="mb-3 text-xl font-bold text-navy">{section.title}</h2><div className="grid gap-3 lg:grid-cols-2">{section.items.map(([question, answer]) => <Card key={question}><p className="font-bold text-navy">{question}</p><p className="mt-2 text-sm leading-6 text-slate-600">{answer}</p></Card>)}</div></section>)}</div></Page>;
+  return <Page title="FAQ & Nutzung" subtitle={`Ausführliche Anleitung für Mitarbeitende der ${INSTANCE_NAME}.`}><div className="mb-5 flex flex-col gap-3 sm:flex-row"><ButtonLink href="/login">App starten</ButtonLink><ButtonLink href="/" secondary>Zur Startseite</ButtonLink></div><div className="space-y-6">{sections.map((section) => <section key={section.title}><h2 className="mb-3 text-xl font-bold text-navy">{section.title}</h2><div className="grid gap-3 lg:grid-cols-2">{section.items.map(([question, answer]) => <Card key={question}><p className="font-bold text-navy">{question}</p><p className="mt-2 text-sm leading-6 text-slate-600">{answer}</p></Card>)}</div></section>)}</div></Page>;
 }
