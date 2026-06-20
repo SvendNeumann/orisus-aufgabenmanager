@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createDemoSessionValue, isDemoEmployeeId, sessionToken, supabaseAdmin, tokenHash, verifyLogin } from "@/lib/orisus";
+import { createDemoSessionValue, homePathFor, isDemoEmployeeId, sessionToken, supabaseAdmin, tokenHash, verifyLogin } from "@/lib/orisus";
 
 export async function POST(request: Request) {
   const form = await request.formData();
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     });
   }
 
-  const response = NextResponse.redirect(new URL(employee.role === "admin" ? "/admin" : "/app", request.url));
+  const response = NextResponse.redirect(new URL(homePathFor(employee), request.url));
   response.cookies.set("orisus_session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
