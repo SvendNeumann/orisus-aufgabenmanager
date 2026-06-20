@@ -17,6 +17,7 @@ export async function POST(request: Request) {
   const token = useDemoSession ? createDemoSessionValue(employee) : sessionToken();
 
   if (!useDemoSession && db) {
+    await db.from("employees").update({ last_login_at: new Date().toISOString() }).eq("id", employee.id);
     await db.from("sessions").insert({
       employee_id: employee.id,
       token_hash: tokenHash(token),
