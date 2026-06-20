@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { CheckCircle2, Clock3, LogOut, ShieldAlert } from "lucide-react";
+import { CheckCircle2, Clock3, ShieldAlert } from "lucide-react";
 import type { ReactNode } from "react";
 import { BackButton } from "@/components/back-button";
+import { LogoutButton } from "@/components/logout-button";
 import { RefreshButton } from "@/components/refresh-button";
 import { labelFor } from "@/lib/orisus";
 
 export function Page({ title, subtitle, children }: { title?: string; subtitle?: string; children: ReactNode }) {
-  return <main className="min-h-screen bg-canvas px-4 py-5 text-ink sm:px-6 lg:px-8"><div className="mx-auto max-w-6xl">{title ? <><div className="flex flex-wrap gap-2"><BackButton /><RefreshButton /><form action="/api/auth/logout" method="post"><button className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-danger shadow-sm"><LogOut className="h-4 w-4" />Abmelden</button></form></div><header className="mb-5"><p className="text-xs font-bold uppercase tracking-wide text-navy/70">ORISUS Aufgabenmanager</p><h1 className="mt-1 text-2xl font-bold text-navy sm:text-3xl">{title}</h1>{subtitle ? <p className="mt-2 max-w-2xl text-sm text-slate-600">{subtitle}</p> : null}</header></> : null}{children}</div></main>;
+  return <main className="min-h-screen bg-canvas px-4 py-5 text-ink sm:px-6 lg:px-8"><div className="mx-auto max-w-6xl">{title ? <><div className="flex flex-wrap gap-2"><BackButton /><RefreshButton /><LogoutButton /></div><header className="mb-5"><p className="text-xs font-bold uppercase tracking-wide text-navy/70">ORISUS Aufgabenmanager</p><h1 className="mt-1 text-2xl font-bold text-navy sm:text-3xl">{title}</h1>{subtitle ? <p className="mt-2 max-w-2xl text-sm text-slate-600">{subtitle}</p> : null}</header></> : null}{children}</div></main>;
 }
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
