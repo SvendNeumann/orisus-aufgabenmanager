@@ -73,6 +73,7 @@ create table if not exists tasks (
   due_weekday integer null,
   due_day_of_month integer null,
   proof_type text check (proof_type in ('none','photo','text','number')) not null,
+  required boolean default true,
   photo_required boolean default false,
   comment_required boolean default false,
   value_required boolean default false,

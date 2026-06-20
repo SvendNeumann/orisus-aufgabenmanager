@@ -21,6 +21,7 @@ export type LiveChecklistItem = {
   required: boolean;
   completed: boolean;
   completed_at?: string | null;
+  completed_by_name?: string | null;
   comment?: string | null;
   photo_url?: string | null;
 };
@@ -174,10 +175,14 @@ export async function getChecklistDetail(occurrenceId: string, user: Employee) {
   const checklist = Array.isArray((occurrence as any).checklists) ? (occurrence as any).checklists[0] : (occurrence as any).checklists;
   const [{ data: items }, { data: completions }] = await Promise.all([
     db.from("checklist_items").select("*").eq("checklist_id", checklist.id).eq("active", true).order("sort_order"),
-    db.from("checklist_item_completions").select("*").eq("checklist_occurrence_id", occurrenceId)
+    db.from("checklist_item_completions").select("*, completed_by:employees!checklist_item_completions_completed_by_employee_id_fkey(display_name)").eq("checklist_occurrence_id", occurrenceId)
   ]);
   const done = new Map((completions || []).map((row) => [row.checklist_item_id, row]));
-  const detailItems = (items || []).map((item) => ({ ...item, required: Boolean(item.required), completed: done.has(item.id), completed_at: done.get(item.id)?.completed_at, comment: done.get(item.id)?.comment, photo_url: done.get(item.id)?.photo_url })) as LiveChecklistItem[];
+  const detailItems = (items || []).map((item) => {
+    const completion: any = done.get(item.id);
+    const completedBy = Array.isArray(completion?.completed_by) ? completion.completed_by[0] : completion?.completed_by;
+    return { ...item, required: Boolean(item.required), completed: done.has(item.id), completed_at: completion?.completed_at, completed_by_name: completedBy?.display_name || null, comment: completion?.comment, photo_url: completion?.photo_url };
+  }) as LiveChecklistItem[];
   return { occurrence: { id: occurrence.id, checklist_id: checklist.id, name: checklist.name, status: occurrence.status, due_time: checklist.due_time, interval_type: checklist.interval_type, completed_count: detailItems.filter((item) => item.completed).length, total_count: detailItems.length }, items: detailItems };
 }
 

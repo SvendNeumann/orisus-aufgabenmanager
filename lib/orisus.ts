@@ -104,16 +104,20 @@ export const checklists: ChecklistOccurrence[] = [
   checklist("c3", "Wochencheck Ulmet", "Ulmet", "16:00", "completed", "weekly"),
   checklist("c4", "Monatscheck Ulmet", "Ulmet", "12:00", "open", "monthly"),
   checklist("c5", "Morgencheck Lauterecken", "Lauterecken", "08:00", "open"),
-  checklist("c6", "Morgencheck Landstuhl", "Landstuhl", "08:00", "open")
+  checklist("c6", "Morgencheck Landstuhl", "Landstuhl", "08:00", "open"),
+  checklist("c7", "Abendcheck Lauterecken", "Lauterecken", "18:30", "open"),
+  checklist("c8", "Abendcheck Landstuhl", "Landstuhl", "18:30", "open")
 ];
 
 export const checklistItems: ChecklistItem[] = [
   ...items("c1", ["Steri gestartet", "Behandlungszimmer kontrolliert", "EC-Terminal geprüft", "Terminbuch geprüft", "Wartezimmer ordentlich"]),
-  ...items("c2", ["Rohre spülen", "Zimmer 1 aufräumen", "Zimmer 2 aufräumen", "Zimmer 3 aufräumen", "Schränke auffüllen", "Steri ausschalten", "Müll entsorgen", "Alarmanlage aktivieren"]),
+  ...eveningItems("c2"),
   ...items("c3", ["Notfallkoffer geprüft", "Medikamentenbestand geprüft", "Lagerbestand kontrolliert", "Verbrauchsmaterial nachbestellt"]),
   ...items("c4", ["Kühlschrank Grundreinigung dokumentiert", "Lagerinventur durchgeführt", "QM-Unterlagen kontrolliert", "Feuerlöscher Sichtprüfung dokumentiert"]),
   ...items("c5", ["Behandlungszimmer kontrolliert", "Terminbuch geprüft", "Wartezimmer ordentlich"]),
-  ...items("c6", ["Behandlungszimmer kontrolliert", "Terminbuch geprüft", "Wartezimmer ordentlich"])
+  ...items("c6", ["Behandlungszimmer kontrolliert", "Terminbuch geprüft", "Wartezimmer ordentlich"]),
+  ...eveningItems("c7"),
+  ...eveningItems("c8")
 ];
 
 export const delegations = [
@@ -136,6 +140,14 @@ function checklist(id: string, name: string, locationName: string, due_time: str
 
 function items(checklist_id: string, names: string[]) {
   return names.map((title, index) => ({ id: `${checklist_id}-${index + 1}`, checklist_id, title, proof_type: "none" as const, required: true }));
+}
+
+function eveningItems(checklist_id: string) {
+  return ["Zimmer 1", "Zimmer 2", "Zimmer 3", "Zimmer 4"].flatMap((room, roomIndex) => [
+    { id: `${checklist_id}-${roomIndex * 3 + 1}`, checklist_id, title: `${room}: Gespült (Spüllösung)`, proof_type: "photo" as const, required: true },
+    { id: `${checklist_id}-${roomIndex * 3 + 2}`, checklist_id, title: `${room}: Schränkchen/Schubladen aufgefüllt`, proof_type: "photo" as const, required: true },
+    { id: `${checklist_id}-${roomIndex * 3 + 3}`, checklist_id, title: `${room}: Siebe gesäubert`, proof_type: "photo" as const, required: true }
+  ]);
 }
 
 export function isSupabaseConfigured() {
