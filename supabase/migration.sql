@@ -14,7 +14,7 @@ create table if not exists employees (
   display_name text not null,
   location_id uuid references locations(id),
   function_title text,
-  role text check (role in ('employee','admin')) not null,
+  role text check (role in ('employee','location_lead','admin')) not null,
   pin_hash text null,
   active boolean default true,
   failed_login_attempts integer default 0,
@@ -25,6 +25,27 @@ create table if not exists employees (
 
 alter table employees alter column pin_hash drop not null;
 alter table employees add column if not exists last_login_at timestamptz null;
+
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.table_constraints
+    where constraint_name = 'employees_role_check'
+      and table_name = 'employees'
+  ) then
+    alter table employees drop constraint employees_role_check;
+  end if;
+end $$;
+
+alter table employees
+  add constraint employees_role_check
+  check (role in ('employee','location_lead','admin'));
+
+update employees
+set role = 'location_lead'
+where display_name = 'Jennifer Meirich'
+  and role = 'employee';
 
 create table if not exists sessions (
   id uuid primary key default gen_random_uuid(),
