@@ -19,7 +19,7 @@ const ids = {
 };
 
 async function main() {
-  await db.from("locations").update({ active: false }).not("name", "in", "(Ulmet,Lauterecken,Landstuhl)");
+  await db.from("locations").update({ active: false }).in("name", ["Verwaltung", "Kehl", "Kirchberg", "Kassel"]);
   await db.from("locations").upsert([
     { id: ids.ulmet, name: "Ulmet", active: true },
     { id: ids.lauterecken, name: "Lauterecken", active: true },
