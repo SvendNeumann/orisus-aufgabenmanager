@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { hashPin, isDemoEmployeeId, sessionToken, supabaseAdmin, tokenHash } from "@/lib/orisus";
+import { hashPin, homePathFor, isDemoEmployeeId, sessionToken, supabaseAdmin, tokenHash } from "@/lib/orisus";
 import { INSTANCE_LOCATIONS } from "@/lib/instance";
 
 export async function POST(request: Request) {
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     expires_at: expires.toISOString()
   });
 
-  const response = NextResponse.redirect(new URL(data.role === "admin" ? "/admin" : "/app", request.url));
+  const response = NextResponse.redirect(new URL(homePathFor(data), request.url));
   response.cookies.set("orisus_session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
