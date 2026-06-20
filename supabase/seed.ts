@@ -37,7 +37,7 @@ async function main() {
 
   await db.from("employees").upsert([
     await employee(ids.svend, "Svend", "Neumann", "Svend Neumann", ids.ulmet, "Admin", "admin", "111111"),
-    await employee(ids.jennifer, "Jennifer", "Meirich", "Jennifer Meirich", ids.ulmet, "Standortleitung", "employee", "222222"),
+    await employee(ids.jennifer, "Jennifer", "Meirich", "Jennifer Meirich", ids.ulmet, "Standortleitung", "location_lead", "222222"),
     await employee(ids.anika, "Anika", "Lützelberger", "Anika Lützelberger", ids.ulmet, "ZMP", "employee", "333333"),
     await employee(ids.jenny, "Jenny", "Beispiel", "Jenny Beispiel", ids.ulmet, "ZFA", "employee", "444444"),
     await employee(ids.hangx, "Dr.", "Hangx", "Dr. Hangx", ids.ulmet, "Zahnarzt", "employee", "555555"),
@@ -75,7 +75,7 @@ async function main() {
   await db.from("checklist_occurrences").upsert(checklistRows.map((row, index) => ({ id: `50000000-0000-0000-0000-${String(index + 1).padStart(12, "0")}`, checklist_id: row.id, occurrence_date: new Date().toISOString().slice(0, 10), location_id: row.location_id, status: "open", due_at: dueAt(row.due_time) })));
 }
 
-async function employee(id: string, first_name: string, last_name: string, display_name: string, location_id: string, function_title: string, role: "employee" | "admin", pin: string) {
+async function employee(id: string, first_name: string, last_name: string, display_name: string, location_id: string, function_title: string, role: "employee" | "location_lead" | "admin", pin: string) {
   return { id, first_name, last_name, display_name, location_id, function_title, role, pin_hash: await bcrypt.hash(pin, 12), active: true };
 }
 function task(id: string, title: string, area: string, location_id: string, assigned_employee_id: string, due_time: string, proof_type: string, value_unit: string | null = null, interval_type = "daily", due_weekday: number | null = null) {
