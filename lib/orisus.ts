@@ -23,6 +23,7 @@ export type Employee = {
 
 export type TaskOccurrence = {
   id: string;
+  task_id?: string;
   title: string;
   description: string;
   area: string;
@@ -121,7 +122,7 @@ function employee(id: string, display_name: string, first_name: string, location
 
 function task(id: string, title: string, area: string, employeeId: string, due_time: string, proof_type: TaskOccurrence["proof_type"], value_unit: string | null = null, status: Status = "open", interval_type: TaskOccurrence["interval_type"] = "daily"): TaskOccurrence {
   const employee = employees.find((item) => item.id === employeeId)!;
-  return { id, title, description: `${title} sauber dokumentieren und bei Auffälligkeiten kommentieren.`, area, location_id: employee.location_id, assigned_employee_id: employeeId, original_employee_id: employeeId, status, due_time, proof_type, value_unit, interval_type, completed_at: status === "completed" ? new Date().toISOString() : null };
+  return { id, task_id: id, title, description: `${title} sauber dokumentieren und bei Auffälligkeiten kommentieren.`, area, location_id: employee.location_id, assigned_employee_id: employeeId, original_employee_id: employeeId, status, due_time, proof_type, value_unit, interval_type, completed_at: status === "completed" ? new Date().toISOString() : null };
 }
 
 function checklist(id: string, name: string, due_time: string, status: Status, interval_type: ChecklistOccurrence["interval_type"] = "daily"): ChecklistOccurrence {
@@ -243,6 +244,34 @@ export async function requireUser(role?: Role) {
 
 export function tasksFor(user: Employee) {
   return user.role === "admin" ? tasks : tasks.filter((item) => item.assigned_employee_id === user.id);
+}
+
+export async function getAdminTasks() {
+  const db = supabaseAdmin();
+  if (!db) return tasks;
+
+  const { data, error } = await db.from("task_occurrences").select("id, task_id, status, completed_at, tasks(id, title, description, area, location_id, assigned_employee_id, interval_type, due_time, proof_type, value_unit)").order("due_at", { ascending: true });
+  if (error || !data) return tasks;
+
+  return data.map((row: any) => {
+    const taskRow = Array.isArray(row.tasks) ? row.tasks[0] : row.tasks;
+    return {
+      id: row.id,
+      task_id: row.task_id || taskRow?.id || row.id,
+      title: taskRow?.title || "Unbenannte Aufgabe",
+      description: taskRow?.description || "",
+      area: taskRow?.area || "",
+      location_id: taskRow?.location_id || "",
+      assigned_employee_id: taskRow?.assigned_employee_id || "",
+      original_employee_id: taskRow?.assigned_employee_id || "",
+      status: row.status,
+      due_time: taskRow?.due_time || "",
+      interval_type: taskRow?.interval_type || "daily",
+      proof_type: taskRow?.proof_type || "none",
+      value_unit: taskRow?.value_unit || null,
+      completed_at: row.completed_at
+    } as TaskOccurrence;
+  });
 }
 
 export function checklistsFor(user: Employee) {
