@@ -23,5 +23,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
   revalidatePath("/admin/employees");
   revalidatePath("/login");
 
-  return NextResponse.redirect(new URL("/admin/employees?deleted=1", request.url));
+  const response = NextResponse.redirect(new URL(`/admin/employees?deleted=1&t=${Date.now()}`, request.url));
+  response.headers.set("Cache-Control", "no-store");
+  return response;
 }
