@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { INSTANCE_LOCATIONS } from "@/lib/instance";
 
 export type Role = "employee" | "admin";
 export type Status = "open" | "completed" | "overdue" | "in_progress" | "delegation_requested" | "delegated" | "rejected" | "pending" | "accepted";
@@ -57,9 +58,7 @@ export type ChecklistItem = {
   required: boolean;
 };
 
-const allowedLocationNames = ["Ulmet", "Lauterecken", "Landstuhl"];
-
-export const locations = allowedLocationNames.map((name, index) => ({
+export const locations = INSTANCE_LOCATIONS.map((name, index) => ({
   id: `loc-${index + 1}`,
   name,
   active: true
@@ -168,7 +167,11 @@ export function sessionToken() {
 }
 
 export function tokenHash(token: string) {
-  return crypto.createHmac("sha256", process.env.SESSION_SECRET || "dev-secret").update(token).digest("hex");
+  return createHmac("sha256", process.env.SESSION_SECRET || "dev-secret").update(token).digest("hex");
+}
+
+function createHmac(algorithm: string, key: string) {
+  return crypto.createHmac(algorithm, key);
 }
 
 export function createDemoSessionValue(employeeRecord: Employee) {
@@ -196,7 +199,7 @@ function verifyDemoLogin(employeeId: string, pin: string) {
 export async function getLocations() {
   const db = supabaseAdmin();
   if (!db) return locations;
-  const { data, error } = await db.from("locations").select("*").eq("active", true).in("name", allowedLocationNames).order("name");
+  const { data, error } = await db.from("locations").select("*").eq("active", true).in("name", INSTANCE_LOCATIONS).order("name");
   if (error || !data || data.length === 0) return locations;
   return data;
 }
@@ -208,7 +211,7 @@ export async function getEmployees() {
   if (error || !data || data.length === 0) return employees;
   return data
     .map((row: any) => ({ ...row, location_name: row.locations?.name || "" }))
-    .filter((row: Employee) => allowedLocationNames.includes(row.location_name));
+    .filter((row: Employee) => INSTANCE_LOCATIONS.includes(row.location_name));
 }
 
 export async function verifyLogin(employeeId: string, pin: string) {
@@ -224,7 +227,7 @@ export async function verifyLogin(employeeId: string, pin: string) {
   if (error || !data) return demoEmployee;
 
   const locationName = (data as any).locations?.name || "";
-  if (!allowedLocationNames.includes(locationName)) return null;
+  if (!INSTANCE_LOCATIONS.includes(locationName)) return null;
   if (data.locked_until && new Date(data.locked_until) > new Date()) return null;
 
   const hasStoredHash = typeof data.pin_hash === "string" && data.pin_hash.length > 0;
@@ -252,7 +255,7 @@ export async function currentUser(): Promise<Employee | null> {
   const { data } = await db.from("sessions").select("employee_id, expires_at, employees(*, locations(name))").eq("token_hash", tokenHash(cookie)).gt("expires_at", new Date().toISOString()).single();
   const employeeRecord: any = data?.employees;
   const locationName = employeeRecord?.locations?.name || "";
-  return employeeRecord && allowedLocationNames.includes(locationName) ? { ...employeeRecord, location_name: locationName } : null;
+  return employeeRecord && INSTANCE_LOCATIONS.includes(locationName) ? { ...employeeRecord, location_name: locationName } : null;
 }
 
 export async function requireUser(role?: Role) {
