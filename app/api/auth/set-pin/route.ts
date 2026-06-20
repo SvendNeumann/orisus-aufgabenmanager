@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     return NextResponse.redirect(new URL(`/login/${employeeId}?error=1`, request.url));
   }
 
-  await db.from("employees").update({ pin_hash: await hashPin(pin), failed_login_attempts: 0, locked_until: null }).eq("id", employeeId);
+  await db.from("employees").update({ pin_hash: await hashPin(pin), failed_login_attempts: 0, locked_until: null, last_login_at: new Date().toISOString() }).eq("id", employeeId);
 
   const expires = new Date(Date.now() + 1000 * 60 * 60 * 12);
   const token = sessionToken();
