@@ -7,9 +7,9 @@ if (!url || !key) throw new Error("NEXT_PUBLIC_SUPABASE_URL und SUPABASE_SERVICE
 
 const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 const ids = {
-  ulmet: "00000000-0000-0000-0000-000000000001",
-  lauterecken: "00000000-0000-0000-0000-000000000002",
+  ulmet: "00000000-0000-0000-0000-000000000002",
   landstuhl: "00000000-0000-0000-0000-000000000003",
+  lauterecken: "00000000-0000-0000-0000-000000000004",
   svend: "10000000-0000-0000-0000-000000000001",
   jennifer: "10000000-0000-0000-0000-000000000002",
   anika: "10000000-0000-0000-0000-000000000003",
