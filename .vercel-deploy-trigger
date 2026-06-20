@@ -1,2 +1,3 @@
-Last manual Vercel deploy trigger: 2026-06-20 14:52 Europe/Berlin
-Reason: Vercel did not pick up latest main commits automatically.
+Last manual Vercel deploy trigger: 2026-06-20 14:59 Europe/Berlin
+Reason: Vercel did not pick up latest route-fix commits automatically.
+Includes route fix through commit 7acccae.
