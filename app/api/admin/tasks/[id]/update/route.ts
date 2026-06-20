@@ -14,8 +14,15 @@ export async function POST(request: Request, { params }: { params: { id: string 
   const db = supabaseAdmin();
 
   if (db) {
-    await db.from("tasks").update({ title, area, location_id: locationId || null, assigned_employee_id: employeeId || null, due_time: dueTime || null }).eq("id", taskId);
-    await db.from("task_occurrences").update({ status, assigned_employee_id: employeeId || null, original_employee_id: employeeId || null }).or(`id.eq.${params.id},task_id.eq.${taskId}`);
+    const { data: employee } = await db.from("employees").select("id, location_id, active").eq("id", employeeId).eq("active", true).single();
+    const { data: location } = await db.from("locations").select("id, name, active").eq("id", locationId).eq("active", true).in("name", ["Ulmet", "Lauterecken", "Landstuhl"]).single();
+
+    if (!employee || !location || employee.location_id !== locationId) {
+      return NextResponse.redirect(new URL("/admin/tasks", request.url));
+    }
+
+    await db.from("tasks").update({ title, area, location_id: locationId, assigned_employee_id: employeeId, due_time: dueTime || null }).eq("id", taskId);
+    await db.from("task_occurrences").update({ status, assigned_employee_id: employeeId, original_employee_id: employeeId }).or(`id.eq.${params.id},task_id.eq.${taskId}`);
   }
 
   return NextResponse.redirect(new URL("/admin/tasks", request.url));
