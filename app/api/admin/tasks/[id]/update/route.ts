@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { INSTANCE_LOCATIONS } from "@/lib/instance";
 import { requireUser, supabaseAdmin } from "@/lib/orisus";
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
@@ -15,7 +16,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
   if (db) {
     const { data: employee } = await db.from("employees").select("id, location_id, active").eq("id", employeeId).eq("active", true).single();
-    const { data: location } = await db.from("locations").select("id, name, active").eq("id", locationId).eq("active", true).in("name", ["Ulmet", "Lauterecken", "Landstuhl"]).single();
+    const { data: location } = await db.from("locations").select("id, name, active").eq("id", locationId).eq("active", true).in("name", INSTANCE_LOCATIONS).single();
 
     if (!employee || !location || employee.location_id !== locationId) {
       return NextResponse.redirect(new URL("/admin/tasks", request.url));
