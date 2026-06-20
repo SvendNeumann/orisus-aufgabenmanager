@@ -8,7 +8,8 @@ export async function POST(request: Request) {
   const lastName = String(form.get("last_name") || "").trim();
   const functionTitle = String(form.get("function_title") || "").trim();
   const locationId = String(form.get("location_id") || "").trim();
-  const role = String(form.get("role") || "employee") === "admin" ? "admin" : "employee";
+  const roleValue = String(form.get("role") || "employee");
+  const role = ["admin", "location_lead", "employee"].includes(roleValue) ? roleValue : "employee";
   const db = supabaseAdmin();
 
   if (db && firstName && lastName && locationId) {
