@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
+import { INSTANCE_LOCATIONS, INSTANCE_NAME } from "../lib/instance";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -19,11 +20,19 @@ const ids = {
 };
 
 async function main() {
-  await db.from("locations").update({ active: false }).in("name", ["Verwaltung", "Kehl", "Kirchberg", "Kassel"]);
+  const { data: existingLocations } = await db.from("locations").select("id, name");
+  const inactiveLocationIds = (existingLocations || [])
+    .filter((location) => !INSTANCE_LOCATIONS.includes(location.name))
+    .map((location) => location.id);
+
+  if (inactiveLocationIds.length > 0) {
+    await db.from("locations").update({ active: false }).in("id", inactiveLocationIds);
+  }
+
   await db.from("locations").upsert([
     { id: ids.ulmet, name: "Ulmet", active: true },
-    { id: ids.lauterecken, name: "Lauterecken", active: true },
-    { id: ids.landstuhl, name: "Landstuhl", active: true }
+    { id: ids.landstuhl, name: "Landstuhl", active: true },
+    { id: ids.lauterecken, name: "Lauterecken", active: true }
   ]);
 
   await db.from("employees").upsert([
@@ -76,4 +85,4 @@ function checklist(id: string, name: string, location_id: string, interval_type:
 function items(checklist_id: string, titles: string[], offset: number) { return titles.map((title, index) => ({ id: `60000000-0000-0000-0000-${String(offset + index).padStart(12, "0")}`, checklist_id, title, sort_order: index + 1, proof_type: "none", active: true })); }
 function dueAt(time: string | null) { if (!time) return null; const date = new Date(); const [hours, minutes] = time.split(":").map(Number); date.setHours(hours || 0, minutes || 0, 0, 0); return date.toISOString(); }
 
-main().then(() => console.log("ORISUS Seed-Daten für Zahnmedizin Westpfalz MVZ wurden eingespielt.")).catch((error) => { console.error(error); process.exit(1); });
+main().then(() => console.log(`ORISUS Seed-Daten für ${INSTANCE_NAME} wurden eingespielt.`)).catch((error) => { console.error(error); process.exit(1); });
