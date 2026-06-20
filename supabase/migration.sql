@@ -158,7 +158,9 @@ create table if not exists audit_log (
 
 create index if not exists idx_task_occurrences_assigned on task_occurrences(assigned_employee_id, occurrence_date);
 create index if not exists idx_task_occurrences_status on task_occurrences(status);
+create unique index if not exists idx_task_occurrences_once_per_day on task_occurrences(task_id, occurrence_date);
 create index if not exists idx_checklist_occurrences_location on checklist_occurrences(location_id, occurrence_date);
+create unique index if not exists idx_checklist_occurrences_once_per_day on checklist_occurrences(checklist_id, occurrence_date);
 create index if not exists idx_sessions_token on sessions(token_hash);
 
 alter table locations enable row level security;
