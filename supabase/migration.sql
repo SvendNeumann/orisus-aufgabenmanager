@@ -15,12 +15,14 @@ create table if not exists employees (
   location_id uuid references locations(id),
   function_title text,
   role text check (role in ('employee','admin')) not null,
-  pin_hash text not null,
+  pin_hash text null,
   active boolean default true,
   failed_login_attempts integer default 0,
   locked_until timestamptz null,
   created_at timestamptz default now()
 );
+
+alter table employees alter column pin_hash drop not null;
 
 create table if not exists sessions (
   id uuid primary key default gen_random_uuid(),
