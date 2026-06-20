@@ -18,6 +18,12 @@ Für jedes MVZ wird später eine eigene, vollständig getrennte Instanz betriebe
 
 Die gemeinsame Grundlage ist nur die Softwarebasis, nicht die Daten. Es gibt in dieser Version keine zentrale Mandantenverwaltung, keine gemeinsame Datenbank für mehrere MVZ, keinen Gruppenadmin und keine technische Trennung über `tenant_id` oder `mvz_id`.
 
+## Öffentliche App-URL
+
+Die aktuelle Vercel-App für diese Instanz läuft unter:
+
+https://westpfalz-aufgabenmanager.vercel.app
+
 ## Tech Stack
 
 - Next.js App Router
@@ -68,7 +74,7 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 SESSION_SECRET=
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=https://westpfalz-aufgabenmanager.vercel.app
 ```
 
 ## Seed-Daten einspielen
