@@ -30,10 +30,11 @@ export async function POST(request: Request) {
       return NextResponse.redirect(new URL("/admin/tasks", request.url));
     }
 
+    const isOneTime = intervalType === "custom";
     const { data: task } = await db.from("tasks").insert({
       title,
-      description: `${title} sauber dokumentieren und bei Auffälligkeiten kommentieren.`,
-      area: area || null,
+      description: isOneTime ? `${title} einmalig erledigen und bei Auffälligkeiten kommentieren.` : `${title} sauber dokumentieren und bei Auffälligkeiten kommentieren.`,
+      area: area || (isOneTime ? "Einmalige Aufgabe" : null),
       location_id: locationId,
       assigned_employee_id: employeeId,
       interval_type: intervalType,
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
       photo_required: proofType === "photo",
       comment_required: proofType === "text",
       value_required: proofType === "number",
-      active: true
+      active: !isOneTime
     }).select("id").single();
 
     if (task?.id) {
