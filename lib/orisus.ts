@@ -17,9 +17,10 @@ export type Employee = {
   function_title: string;
   role: Role;
   active: boolean;
-  pin_hash?: string;
+  pin_hash?: string | null;
   failed_login_attempts?: number;
   locked_until?: string | null;
+  last_login_at?: string | null;
 };
 
 export type TaskOccurrence = {
