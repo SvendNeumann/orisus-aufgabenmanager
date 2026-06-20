@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { unstable_noStore as noStore } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcryptjs";
@@ -195,6 +196,7 @@ function verifyDemoLogin(employeeId: string, pin: string) {
 }
 
 export async function getLocations() {
+  noStore();
   const db = supabaseAdmin();
   if (!db) return locations;
   const { data, error } = await db.from("locations").select("*").eq("active", true).in("name", INSTANCE_LOCATIONS).order("name");
@@ -203,6 +205,7 @@ export async function getLocations() {
 }
 
 export async function getEmployees() {
+  noStore();
   const db = supabaseAdmin();
   if (!db) return employees;
   const { data, error } = await db.from("employees").select("*, locations(name)").eq("active", true).order("display_name");
