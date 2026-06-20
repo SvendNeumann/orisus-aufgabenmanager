@@ -53,7 +53,7 @@ function isDueToday(row: any, date = new Date()) {
   if (row.interval_type === "daily") return true;
   if (row.interval_type === "weekly") return row.due_weekday == null || Number(row.due_weekday) === date.getDay();
   if (row.interval_type === "monthly") return row.due_day_of_month == null || Number(row.due_day_of_month) === date.getDate();
-  return true;
+  return false;
 }
 
 async function ensureTaskOccurrences() {
