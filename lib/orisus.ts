@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { INSTANCE_LOCATIONS } from "@/lib/instance";
 
-export type Role = "employee" | "admin";
+export type Role = "employee" | "location_lead" | "admin";
 export type Status = "open" | "completed" | "overdue" | "in_progress" | "delegation_requested" | "delegated" | "rejected" | "pending" | "accepted";
 
 export type Employee = {
@@ -72,7 +72,7 @@ export const demoPins: Record<string, string> = {
 
 export const employees: Employee[] = [
   employee("emp-svend", "Svend Neumann", "Svend", "Ulmet", "Admin", "admin"),
-  employee("emp-jennifer", "Jennifer Meirich", "Jennifer", "Ulmet", "Standortleitung", "employee"),
+  employee("emp-jennifer", "Jennifer Meirich", "Jennifer", "Ulmet", "Standortleitung", "location_lead"),
   employee("emp-anika", "Anika Lützelberger", "Anika", "Ulmet", "ZMP", "employee"),
   employee("emp-jenny", "Jenny Beispiel", "Jenny", "Ulmet", "ZFA", "employee"),
   employee("emp-hangx", "Dr. Hangx", "Dr.", "Ulmet", "Zahnarzt", "employee"),
@@ -255,15 +255,11 @@ export async function currentUser(): Promise<Employee | null> {
   return employeeRecord && INSTANCE_LOCATIONS.includes(locationName) ? { ...employeeRecord, location_name: locationName } : null;
 }
 
-export function isLocationLead(user: Pick<Employee, "function_title">) {
-  return String(user.function_title || "").toLowerCase().includes("standortleitung");
+export function canUseAdminArea(user: Pick<Employee, "role">) {
+  return user.role === "admin" || user.role === "location_lead";
 }
 
-export function canUseAdminArea(user: Pick<Employee, "role" | "function_title">) {
-  return user.role === "admin" || isLocationLead(user);
-}
-
-export function homePathFor(user: Pick<Employee, "role" | "function_title">) {
+export function homePathFor(user: Pick<Employee, "role">) {
   return canUseAdminArea(user) ? "/admin" : "/app";
 }
 
