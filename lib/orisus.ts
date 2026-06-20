@@ -59,11 +59,7 @@ export type ChecklistItem = {
   required: boolean;
 };
 
-export const locations = INSTANCE_LOCATIONS.map((name, index) => ({
-  id: `loc-${index + 1}`,
-  name,
-  active: true
-}));
+export const locations = INSTANCE_LOCATIONS.map((name, index) => ({ id: `loc-${index + 1}`, name, active: true }));
 
 export const demoPins: Record<string, string> = {
   "emp-svend": "111111",
@@ -274,7 +270,10 @@ export function homePathFor(user: Pick<Employee, "role" | "function_title">) {
 export async function requireUser(role?: Role) {
   const user = await currentUser();
   if (!user) redirect("/login");
-  if (role && user.role !== role) redirect(homePathFor(user));
+  if (role && user.role !== role) {
+    if (role === "admin" && canUseAdminArea(user)) return user;
+    redirect(homePathFor(user));
+  }
   return user;
 }
 
