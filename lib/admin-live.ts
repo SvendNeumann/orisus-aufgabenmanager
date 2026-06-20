@@ -62,7 +62,7 @@ export async function getAdminChecklistRows() {
   const ids = data.map((row) => row.id);
   const checklistIds = data.map((row: any) => (Array.isArray(row.checklists) ? row.checklists[0] : row.checklists)?.id).filter(Boolean);
   const [{ data: items }, { data: completions }] = await Promise.all([
-    db.from("checklist_items").select("id, checklist_id, required").in("checklist_id", checklistIds).eq("active", true),
+    db.from("checklist_items").select("id, checklist_id").in("checklist_id", checklistIds).eq("active", true),
     db.from("checklist_item_completions").select("checklist_occurrence_id, checklist_item_id").in("checklist_occurrence_id", ids)
   ]);
   return data.map((row: any) => {

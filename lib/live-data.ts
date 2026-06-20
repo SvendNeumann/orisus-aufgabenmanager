@@ -1,4 +1,5 @@
 import { canWorkAtLocation, checklistItems, checklists, delegations, Employee, getEmployees, supabaseAdmin, tasks, TaskOccurrence } from "@/lib/orisus";
+import { INSTANCE_LOCATIONS } from "@/lib/instance";
 
 export type LiveChecklist = {
   id: string;
@@ -57,6 +58,37 @@ function isDueToday(row: any, date = new Date()) {
   return false;
 }
 
+const EVENING_CHECK_TITLES = ["Zimmer 1: Gespült (Spüllösung)", "Zimmer 1: Schränkchen/Schubladen aufgefüllt", "Zimmer 1: Siebe gesäubert", "Zimmer 2: Gespült (Spüllösung)", "Zimmer 2: Schränkchen/Schubladen aufgefüllt", "Zimmer 2: Siebe gesäubert", "Zimmer 3: Gespült (Spüllösung)", "Zimmer 3: Schränkchen/Schubladen aufgefüllt", "Zimmer 3: Siebe gesäubert", "Zimmer 4: Gespült (Spüllösung)", "Zimmer 4: Schränkchen/Schubladen aufgefüllt", "Zimmer 4: Siebe gesäubert"];
+
+async function ensureEveningChecklists() {
+  const db = supabaseAdmin();
+  if (!db) return;
+  const { data: locationRows } = await db.from("locations").select("id, name").eq("active", true).in("name", INSTANCE_LOCATIONS);
+  if (!locationRows || locationRows.length === 0) return;
+
+  const expectedNames = locationRows.map((location) => `Abendcheck ${location.name}`);
+  const { data: existingChecks } = await db.from("checklists").select("id, name, location_id").eq("active", true).in("name", expectedNames);
+  const existingKeys = new Set((existingChecks || []).map((check) => `${check.location_id}:${check.name}`));
+  const missingChecks = locationRows
+    .map((location) => ({ name: `Abendcheck ${location.name}`, location_id: location.id, interval_type: "daily", due_time: "18:30", active: true }))
+    .filter((check) => !existingKeys.has(`${check.location_id}:${check.name}`));
+
+  if (missingChecks.length > 0) await db.from("checklists").insert(missingChecks);
+
+  const { data: eveningChecks } = await db.from("checklists").select("id, name, location_id").eq("active", true).in("name", expectedNames);
+  const checklistIds = (eveningChecks || []).map((check) => check.id);
+  if (checklistIds.length === 0) return;
+
+  const { data: existingItems } = await db.from("checklist_items").select("checklist_id, title").eq("active", true).in("checklist_id", checklistIds);
+  const itemKeys = new Set((existingItems || []).map((item) => `${item.checklist_id}:${item.title}`));
+  const missingItems = (eveningChecks || []).flatMap((check) =>
+    EVENING_CHECK_TITLES.map((title, index) => ({ checklist_id: check.id, title, sort_order: index + 1, proof_type: "photo", photo_required: true, active: true }))
+      .filter((item) => !itemKeys.has(`${item.checklist_id}:${item.title}`))
+  );
+
+  if (missingItems.length > 0) await db.from("checklist_items").insert(missingItems);
+}
+
 async function ensureTaskOccurrences() {
   const db = supabaseAdmin();
   if (!db) return;
@@ -81,6 +113,7 @@ async function ensureTaskOccurrences() {
 async function ensureChecklistOccurrences() {
   const db = supabaseAdmin();
   if (!db) return;
+  await ensureEveningChecklists();
   const date = todayISO();
   const { data: checklistRows } = await db.from("checklists").select("*").eq("active", true);
   const dueChecks = (checklistRows || []).filter((row) => isDueToday(row));
@@ -150,14 +183,14 @@ export async function getEmployeeChecklists(user: Employee): Promise<LiveCheckli
   const occurrenceIds = data.map((row) => row.id);
   const checklistIds = data.map((row: any) => (Array.isArray(row.checklists) ? row.checklists[0] : row.checklists)?.id).filter(Boolean);
   const [{ data: itemRows }, { data: completionRows }] = await Promise.all([
-    db.from("checklist_items").select("id, checklist_id, required").in("checklist_id", checklistIds).eq("active", true),
+    db.from("checklist_items").select("id, checklist_id").in("checklist_id", checklistIds).eq("active", true),
     db.from("checklist_item_completions").select("checklist_occurrence_id, checklist_item_id").in("checklist_occurrence_id", occurrenceIds)
   ]);
   return data.map((row: any) => {
     const checklist = Array.isArray(row.checklists) ? row.checklists[0] : row.checklists;
     const items = (itemRows || []).filter((item) => item.checklist_id === checklist?.id);
     const completions = (completionRows || []).filter((item) => item.checklist_occurrence_id === row.id);
-    return { id: row.id, checklist_id: checklist?.id || row.checklist_id, name: checklist?.name || "Checkliste", location_id: row.location_id, status: row.status, due_time: checklist?.due_time || "", interval_type: checklist?.interval_type || "daily", completed_count: completions.length, total_count: items.length, required_count: items.filter((item) => item.required).length };
+    return { id: row.id, checklist_id: checklist?.id || row.checklist_id, name: checklist?.name || "Checkliste", location_id: row.location_id, status: row.status, due_time: checklist?.due_time || "", interval_type: checklist?.interval_type || "daily", completed_count: completions.length, total_count: items.length, required_count: items.length };
   });
 }
 
@@ -181,7 +214,7 @@ export async function getChecklistDetail(occurrenceId: string, user: Employee) {
   const detailItems = (items || []).map((item) => {
     const completion: any = done.get(item.id);
     const completedBy = Array.isArray(completion?.completed_by) ? completion.completed_by[0] : completion?.completed_by;
-    return { ...item, required: Boolean(item.required), completed: done.has(item.id), completed_at: completion?.completed_at, completed_by_name: completedBy?.display_name || null, comment: completion?.comment, photo_url: completion?.photo_url };
+    return { ...item, required: true, completed: done.has(item.id), completed_at: completion?.completed_at, completed_by_name: completedBy?.display_name || null, comment: completion?.comment, photo_url: completion?.photo_url };
   }) as LiveChecklistItem[];
   return { occurrence: { id: occurrence.id, checklist_id: checklist.id, name: checklist.name, status: occurrence.status, due_time: checklist.due_time, interval_type: checklist.interval_type, completed_count: detailItems.filter((item) => item.completed).length, total_count: detailItems.length }, items: detailItems };
 }

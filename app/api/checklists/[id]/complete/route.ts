@@ -14,7 +14,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
   if (!canWorkAtLocation(user, occurrence.location_id)) return NextResponse.redirect(new URL("/app/checklists", request.url));
 
   const [{ data: requiredItems }, { data: completions }] = await Promise.all([
-    db.from("checklist_items").select("id").eq("checklist_id", checklist.id).eq("active", true).eq("required", true),
+    db.from("checklist_items").select("id").eq("checklist_id", checklist.id).eq("active", true),
     db.from("checklist_item_completions").select("checklist_item_id").eq("checklist_occurrence_id", params.id)
   ]);
 

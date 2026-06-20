@@ -6,7 +6,6 @@ export async function POST(request: Request, { params }: { params: { id: string 
   const form = await request.formData();
   const title = String(form.get("title") || "").trim();
   const proofType = String(form.get("proof_type") || "none").trim();
-  const required = String(form.get("required") || "") === "on";
   const db = supabaseAdmin();
 
   if (db && title) {
@@ -20,7 +19,6 @@ export async function POST(request: Request, { params }: { params: { id: string 
         photo_required: proofType === "photo",
         comment_required: proofType === "text",
         value_required: proofType === "number",
-        required,
         active: true
       });
     }
