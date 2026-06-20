@@ -132,11 +132,19 @@ function items(checklist_id: string, names: string[]) {
   return names.map((title, index) => ({ id: `${checklist_id}-${index + 1}`, checklist_id, title, proof_type: "none" as const, required: true }));
 }
 
+export function isSupabaseConfigured() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  return Boolean(url && key && url.startsWith("https://") && !key.includes("replace-with"));
+}
+
+export function isDemoEmployeeId(employeeId: string) {
+  return Object.prototype.hasOwnProperty.call(demoPins, employeeId);
+}
+
 export function supabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  if (!isSupabaseConfigured()) return null;
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
 export async function hashPin(pin: string) {
@@ -155,44 +163,72 @@ export function tokenHash(token: string) {
   return crypto.createHmac("sha256", process.env.SESSION_SECRET || "dev-secret").update(token).digest("hex");
 }
 
+export function createDemoSessionValue(employee: Employee) {
+  return Buffer.from(JSON.stringify({ employee_id: employee.id, role: employee.role, demo: true })).toString("base64url");
+}
+
+function parseDemoSessionValue(value: string) {
+  try {
+    const parsed = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
+    if (!parsed?.demo || typeof parsed.employee_id !== "string") return null;
+    return employees.find((item) => item.id === parsed.employee_id) || null;
+  } catch {
+    return null;
+  }
+}
+
+function verifyDemoLogin(employeeId: string, pin: string) {
+  const normalizedEmployeeId = employeeId.trim();
+  const normalizedPin = pin.trim();
+  if (!/^\d{6}$/.test(normalizedPin)) return null;
+  if (demoPins[normalizedEmployeeId] !== normalizedPin) return null;
+  return employees.find((item) => item.id === normalizedEmployeeId && item.active) || null;
+}
+
 export async function getEmployees() {
   const db = supabaseAdmin();
   if (!db) return employees;
   const { data, error } = await db.from("employees").select("*, locations(name)").eq("active", true).order("display_name");
-  if (error || !data) return employees;
+  if (error || !data || data.length === 0) return employees;
   return data.map((row: any) => ({ ...row, location_name: row.locations?.name || "" })) as Employee[];
 }
 
 export async function verifyLogin(employeeId: string, pin: string) {
+  const normalizedEmployeeId = employeeId.trim();
+  const normalizedPin = pin.trim();
+  const demoEmployee = verifyDemoLogin(normalizedEmployeeId, normalizedPin);
   const db = supabaseAdmin();
-  if (!/^\d{6}$/.test(pin)) return null;
-  if (!db) {
-    const employee = employees.find((item) => item.id === employeeId && demoPins[item.id] === pin);
-    return employee || null;
-  }
-  const { data } = await db.from("employees").select("*").eq("id", employeeId).eq("active", true).single();
-  if (!data) return null;
+
+  if (!db) return demoEmployee;
+  if (!/^\d{6}$/.test(normalizedPin)) return null;
+
+  const { data, error } = await db.from("employees").select("*").eq("id", normalizedEmployeeId).eq("active", true).single();
+  if (error || !data) return demoEmployee;
+
   if (data.locked_until && new Date(data.locked_until) > new Date()) return null;
-  const ok = await verifyPin(pin, data.pin_hash);
+
+  const hasStoredHash = typeof data.pin_hash === "string" && data.pin_hash.length > 0;
+  const ok = hasStoredHash ? await verifyPin(normalizedPin, data.pin_hash) : Boolean(demoEmployee);
   if (!ok) {
     const failed = Number(data.failed_login_attempts || 0) + 1;
-    await db.from("employees").update({ failed_login_attempts: failed, locked_until: failed >= 5 ? new Date(Date.now() + 15 * 60 * 1000).toISOString() : null }).eq("id", employeeId);
+    await db.from("employees").update({ failed_login_attempts: failed, locked_until: failed >= 5 ? new Date(Date.now() + 15 * 60 * 1000).toISOString() : null }).eq("id", normalizedEmployeeId);
     return null;
   }
-  await db.from("employees").update({ failed_login_attempts: 0, locked_until: null }).eq("id", employeeId);
-  return data as Employee;
+
+  await db.from("employees").update({ failed_login_attempts: 0, locked_until: null }).eq("id", normalizedEmployeeId);
+  return { ...data, location_name: data.location_name || "" } as Employee;
 }
 
 export async function currentUser(): Promise<Employee | null> {
   const cookie = cookies().get("orisus_session")?.value;
   if (!cookie) return null;
+
+  const demoEmployee = parseDemoSessionValue(cookie);
+  if (demoEmployee) return demoEmployee;
+
   const db = supabaseAdmin();
-  if (!db) {
-    try {
-      const parsed = JSON.parse(Buffer.from(cookie, "base64url").toString("utf8"));
-      return employees.find((item) => item.id === parsed.employee_id) || null;
-    } catch { return null; }
-  }
+  if (!db) return null;
+
   const { data } = await db.from("sessions").select("employee_id, expires_at, employees(*, locations(name))").eq("token_hash", tokenHash(cookie)).gt("expires_at", new Date().toISOString()).single();
   const employee: any = data?.employees;
   return employee ? { ...employee, location_name: employee.locations?.name || "" } : null;
