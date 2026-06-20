@@ -1,4 +1,4 @@
-import { checklistItems, checklists, delegations, Employee, getEmployees, isSupabaseConfigured, locations, supabaseAdmin, tasks, TaskOccurrence } from "@/lib/orisus";
+import { canWorkAtLocation, checklistItems, checklists, delegations, Employee, getEmployees, supabaseAdmin, tasks, TaskOccurrence } from "@/lib/orisus";
 
 export type LiveChecklist = {
   id: string;
@@ -140,9 +140,11 @@ export async function getEmployeeTasks(user: Employee) {
 
 export async function getEmployeeChecklists(user: Employee): Promise<LiveChecklist[]> {
   const db = supabaseAdmin();
-  if (!db) return checklists.filter((check) => check.location_id === user.location_id).map((check) => ({ ...check, checklist_id: check.id, completed_count: 0, total_count: checklistItems.filter((item) => item.checklist_id === check.id).length, required_count: checklistItems.filter((item) => item.checklist_id === check.id && item.required).length }));
+  if (!db) return checklists.filter((check) => canWorkAtLocation(user, check.location_id)).map((check) => ({ ...check, checklist_id: check.id, completed_count: 0, total_count: checklistItems.filter((item) => item.checklist_id === check.id).length, required_count: checklistItems.filter((item) => item.checklist_id === check.id && item.required).length }));
   await ensureTodayWork();
-  const { data, error } = await db.from("checklist_occurrences").select("*, checklists(*)").eq("location_id", user.location_id).order("due_at", { ascending: true }).limit(100);
+  let query = db.from("checklist_occurrences").select("*, checklists(*)").order("due_at", { ascending: true }).limit(100);
+  if (!user.works_across_locations) query = query.eq("location_id", user.location_id);
+  const { data, error } = await query;
   if (error || !data || data.length === 0) return [];
   const occurrenceIds = data.map((row) => row.id);
   const checklistIds = data.map((row: any) => (Array.isArray(row.checklists) ? row.checklists[0] : row.checklists)?.id).filter(Boolean);
@@ -166,8 +168,9 @@ export async function getChecklistDetail(occurrenceId: string, user: Employee) {
     return { occurrence: { ...check, checklist_id: check.id, completed_count: 0, total_count: items.length }, items };
   }
   await ensureTodayWork();
-  const { data: occurrence } = await db.from("checklist_occurrences").select("*, checklists(*)").eq("id", occurrenceId).eq("location_id", user.location_id).single();
+  const { data: occurrence } = await db.from("checklist_occurrences").select("*, checklists(*)").eq("id", occurrenceId).single();
   if (!occurrence) return null;
+  if (!canWorkAtLocation(user, occurrence.location_id)) return null;
   const checklist = Array.isArray((occurrence as any).checklists) ? (occurrence as any).checklists[0] : (occurrence as any).checklists;
   const [{ data: items }, { data: completions }] = await Promise.all([
     db.from("checklist_items").select("*").eq("checklist_id", checklist.id).eq("active", true).order("sort_order"),
@@ -191,5 +194,5 @@ export async function getEmployeeDelegations(user: Employee): Promise<LiveDelega
 
 export async function getDelegationTargets(user: Employee) {
   const all = await getEmployees();
-  return all.filter((employee) => employee.id !== user.id && employee.location_id === user.location_id && employee.active);
+  return all.filter((employee) => employee.id !== user.id && employee.active && (user.works_across_locations || employee.works_across_locations || employee.location_id === user.location_id));
 }

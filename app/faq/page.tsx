@@ -26,7 +26,7 @@ const sections = [
     title: "Aufgaben erledigen",
     items: [
       ["Was sehe ich nach dem Login?", "Du siehst dein persönliches Dashboard mit offenen, erledigten und überfälligen Aufgaben. Außerdem findest du die Checklisten deines Standorts, deine Historie und Vertretungsanfragen."],
-      ["Welche Aufgaben sehe ich?", "Mitarbeiter sehen nur die eigenen persönlichen Aufgaben sowie die Standort-Checklisten des eigenen Standorts. Admins können standortübergreifend alle Aufgaben und Checklisten sehen."],
+      ["Welche Aufgaben sehe ich?", "Mitarbeiter sehen die eigenen persönlichen Aufgaben sowie die Checklisten der zugeordneten Standorte. Wer standortübergreifend angelegt ist, kann an Ulmet, Landstuhl und Lauterecken eingesetzt werden. Admins und Standortleitungen können standortübergreifend steuern."],
       ["Wie erledige ich eine Aufgabe?", "Öffne die Aufgabe, lies Beschreibung und Fälligkeit, erfasse den geforderten Nachweis und tippe auf Als erledigt markieren. Die App speichert automatisch Datum, Uhrzeit, Mitarbeiter und Standort."],
       ["Welche Nachweise gibt es?", "Es gibt Aufgaben ohne Nachweis, Aufgaben mit Kommentar, Aufgaben mit Zahlenwert und Aufgaben mit Foto-Nachweis. Die App zeigt dir jeweils nur das an, was für diese Aufgabe benötigt wird."],
       ["Kann ich eine erledigte Aufgabe einfach verschwinden lassen?", "Erledigte Aufgaben sollen in der Historie nachvollziehbar bleiben. Dadurch kann später geprüft werden, wann und von wem eine Aufgabe erledigt wurde."],
@@ -81,10 +81,10 @@ const sections = [
   {
     title: "Rollen & Sichtbarkeit",
     items: [
-      ["Was kann ein Mitarbeiter sehen?", "Mitarbeiter sehen die eigenen Aufgaben, Standort-Checklisten des eigenen Standorts, eigene Historie, Vertretungen, FAQ und Menüfunktionen."],
+      ["Was kann ein Mitarbeiter sehen?", "Mitarbeiter sehen die eigenen Aufgaben, passende Standort-Checklisten, eigene Historie, Vertretungen, FAQ und Menüfunktionen. Bei standortübergreifender Zuordnung können mehrere Standorte sichtbar sein."],
       ["Was kann ein Admin sehen?", "Admins können alle Standorte, Mitarbeiter, Aufgaben, Checklisten, Erledigungen, Nachweise, Fotos und Vertretungen sehen und verwalten."],
       ["Warum sieht ein Admin mehr?", "Admins brauchen die standortübergreifende Übersicht, um offene und überfällige Aufgaben, Nachweise, Mitarbeiterverwaltung und Qualitätssicherung zu steuern."],
-      ["Kann ein Mitarbeiter Aufgaben für andere Standorte sehen?", "Nein. Im vorgesehenen Betrieb sehen Mitarbeitende nur Inhalte des eigenen Standorts und eigene persönliche Aufgaben."],
+      ["Kann ein Mitarbeiter Aufgaben für andere Standorte sehen?", "Nur wenn die Person als standortübergreifend tätig angelegt wurde. Sonst sieht sie nur Inhalte des eigenen Standorts und die eigenen persönlichen Aufgaben."],
       ["Welche Standorte gehören zu dieser App?", `Diese App ist nur für ${INSTANCE_NAME} mit den Standorten ${locationLabel} gedacht. Andere MVZs erhalten eigene, vollständig getrennte App-Instanzen.`]
     ]
   },

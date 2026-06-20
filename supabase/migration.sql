@@ -15,6 +15,7 @@ create table if not exists employees (
   location_id uuid references locations(id),
   function_title text,
   role text check (role in ('employee','location_lead','admin')) not null,
+  works_across_locations boolean default false,
   pin_hash text null,
   active boolean default true,
   failed_login_attempts integer default 0,
@@ -25,6 +26,7 @@ create table if not exists employees (
 
 alter table employees alter column pin_hash drop not null;
 alter table employees add column if not exists last_login_at timestamptz null;
+alter table employees add column if not exists works_across_locations boolean default false;
 
 do $$
 begin
@@ -46,6 +48,10 @@ update employees
 set role = 'location_lead'
 where display_name = 'Jennifer Meirich'
   and role = 'employee';
+
+update employees
+set works_across_locations = true
+where role in ('admin','location_lead');
 
 create table if not exists sessions (
   id uuid primary key default gen_random_uuid(),

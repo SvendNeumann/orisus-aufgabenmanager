@@ -15,10 +15,10 @@ export async function POST(request: Request, { params }: { params: { id: string 
   const db = supabaseAdmin();
 
   if (db) {
-    const { data: employee } = await db.from("employees").select("id, location_id, active").eq("id", employeeId).eq("active", true).single();
+    const { data: employee } = await db.from("employees").select("id, location_id, works_across_locations, active").eq("id", employeeId).eq("active", true).single();
     const { data: location } = await db.from("locations").select("id, name, active").eq("id", locationId).eq("active", true).in("name", INSTANCE_LOCATIONS).single();
 
-    if (!employee || !location || employee.location_id !== locationId) {
+    if (!employee || !location || (!employee.works_across_locations && employee.location_id !== locationId)) {
       return NextResponse.redirect(new URL("/admin/tasks", request.url));
     }
 

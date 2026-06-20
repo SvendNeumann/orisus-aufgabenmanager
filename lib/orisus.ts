@@ -17,6 +17,7 @@ export type Employee = {
   function_title: string;
   role: Role;
   active: boolean;
+  works_across_locations?: boolean;
   pin_hash?: string | null;
   failed_login_attempts?: number;
   locked_until?: string | null;
@@ -71,8 +72,8 @@ export const demoPins: Record<string, string> = {
 };
 
 export const employees: Employee[] = [
-  employee("emp-svend", "Svend Neumann", "Svend", "Ulmet", "Admin", "admin"),
-  employee("emp-jennifer", "Jennifer Meirich", "Jennifer", "Ulmet", "Standortleitung", "location_lead"),
+  employee("emp-svend", "Svend Neumann", "Svend", "Ulmet", "Admin", "admin", true),
+  employee("emp-jennifer", "Jennifer Meirich", "Jennifer", "Ulmet", "Standortleitung", "location_lead", true),
   employee("emp-anika", "Anika Lützelberger", "Anika", "Ulmet", "ZMP", "employee"),
   employee("emp-jenny", "Jenny Beispiel", "Jenny", "Ulmet", "ZFA", "employee"),
   employee("emp-hangx", "Dr. Hangx", "Dr.", "Ulmet", "Zahnarzt", "employee"),
@@ -118,9 +119,9 @@ export const delegations = [
   { id: "d1", task_id: "t7", from: "emp-anika", to: "emp-jenny", status: "pending" as Status, comment: "Kannst du heute den Abend-Steri übernehmen?", requested_at: new Date().toISOString() }
 ];
 
-function employee(id: string, display_name: string, first_name: string, locationName: string, function_title: string, role: Role): Employee {
+function employee(id: string, display_name: string, first_name: string, locationName: string, function_title: string, role: Role, works_across_locations = false): Employee {
   const location = locations.find((item) => item.name === locationName)!;
-  return { id, display_name, first_name, location_id: location.id, location_name: location.name, function_title, role, active: true };
+  return { id, display_name, first_name, location_id: location.id, location_name: location.name, function_title, role, active: true, works_across_locations };
 }
 
 function task(id: string, title: string, area: string, employeeId: string, due_time: string, proof_type: TaskOccurrence["proof_type"], value_unit: string | null = null, status: Status = "open", interval_type: TaskOccurrence["interval_type"] = "daily"): TaskOccurrence {
@@ -209,6 +210,14 @@ export async function getEmployees() {
   return data
     .map((row: any) => ({ ...row, location_name: row.locations?.name || "" }))
     .filter((row: Employee) => INSTANCE_LOCATIONS.includes(row.location_name));
+}
+
+export function locationLabelForEmployee(employeeRecord: Pick<Employee, "location_name" | "works_across_locations">) {
+  return employeeRecord.works_across_locations ? "Standortübergreifend" : employeeRecord.location_name;
+}
+
+export function canWorkAtLocation(user: Pick<Employee, "location_id" | "works_across_locations">, locationId: string) {
+  return Boolean(user.works_across_locations) || user.location_id === locationId;
 }
 
 export async function verifyLogin(employeeId: string, pin: string) {
@@ -315,7 +324,7 @@ export async function getAdminTasks() {
 }
 
 export function checklistsFor(user: Employee) {
-  return canUseAdminArea(user) ? checklists : checklists.filter((item) => item.location_id === user.location_id);
+  return canUseAdminArea(user) || user.works_across_locations ? checklists : checklists.filter((item) => item.location_id === user.location_id);
 }
 
 export function labelFor(status: string) {

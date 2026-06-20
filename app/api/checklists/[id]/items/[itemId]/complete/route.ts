@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUser, supabaseAdmin } from "@/lib/orisus";
+import { canWorkAtLocation, requireUser, supabaseAdmin } from "@/lib/orisus";
 
 export async function POST(request: Request, { params }: { params: { id: string; itemId: string } }) {
   const user = await requireUser("employee");
@@ -7,9 +7,10 @@ export async function POST(request: Request, { params }: { params: { id: string;
   const db = supabaseAdmin();
   if (!db) return NextResponse.redirect(new URL(`/app/checklists/${params.id}`, request.url));
 
-  const { data: occurrence } = await db.from("checklist_occurrences").select("*, checklists(id)").eq("id", params.id).eq("location_id", user.location_id).single();
+  const { data: occurrence } = await db.from("checklist_occurrences").select("*, checklists(id)").eq("id", params.id).single();
   const checklist = Array.isArray((occurrence as any)?.checklists) ? (occurrence as any).checklists[0] : (occurrence as any)?.checklists;
   if (!occurrence || !checklist) return NextResponse.redirect(new URL("/app/checklists", request.url));
+  if (!canWorkAtLocation(user, occurrence.location_id)) return NextResponse.redirect(new URL("/app/checklists", request.url));
 
   const { data: item } = await db.from("checklist_items").select("*").eq("id", params.itemId).eq("checklist_id", checklist.id).eq("active", true).single();
   if (!item) return NextResponse.redirect(new URL(`/app/checklists/${params.id}`, request.url));

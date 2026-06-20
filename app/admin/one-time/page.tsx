@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Card, Page } from "@/components/ui";
-import { getEmployees, requireUser } from "@/lib/orisus";
+import { getEmployees, locationLabelForEmployee, requireUser } from "@/lib/orisus";
 
 export default async function AdminOneTimeTaskPage() {
   await requireUser("admin");
@@ -14,7 +14,7 @@ export default async function AdminOneTimeTaskPage() {
         <input name="area" placeholder="Bereich/Position" className="h-11 rounded-xl border border-slate-200 px-3 focus-ring" />
         <select name="assigned_employee_id" required className="h-11 rounded-xl border border-slate-200 px-3 focus-ring">
           <option value="">Mitarbeiter auswählen</option>
-          {employees.map((employee) => <option key={employee.id} value={employee.id}>{employee.display_name} · {employee.location_name} · {employee.function_title}</option>)}
+          {employees.map((employee) => <option key={employee.id} value={employee.id}>{employee.display_name} · {locationLabelForEmployee(employee)} · {employee.function_title}</option>)}
         </select>
         <input name="due_date" type="date" className="h-11 rounded-xl border border-slate-200 px-3 focus-ring" />
         <input name="due_time" placeholder="Uhrzeit" className="h-11 rounded-xl border border-slate-200 px-3 focus-ring" />
