@@ -259,15 +259,34 @@ export async function currentUser(): Promise<Employee | null> {
   return employeeRecord && INSTANCE_LOCATIONS.includes(locationName) ? { ...employeeRecord, location_name: locationName } : null;
 }
 
+export function isLocationLead(user: Pick<Employee, "function_title">) {
+  return String(user.function_title || "").toLowerCase().includes("standortleitung");
+}
+
+export function canUseAdminArea(user: Pick<Employee, "role" | "function_title">) {
+  return user.role === "admin" || isLocationLead(user);
+}
+
+export function homePathFor(user: Pick<Employee, "role" | "function_title">) {
+  return canUseAdminArea(user) ? "/admin" : "/app";
+}
+
 export async function requireUser(role?: Role) {
   const user = await currentUser();
   if (!user) redirect("/login");
-  if (role && user.role !== role) redirect(user.role === "admin" ? "/admin" : "/app");
+  if (role && user.role !== role) redirect(homePathFor(user));
+  return user;
+}
+
+export async function requireAdminArea() {
+  const user = await currentUser();
+  if (!user) redirect("/login");
+  if (!canUseAdminArea(user)) redirect("/app");
   return user;
 }
 
 export function tasksFor(user: Employee) {
-  return user.role === "admin" ? tasks : tasks.filter((item) => item.assigned_employee_id === user.id);
+  return canUseAdminArea(user) ? tasks : tasks.filter((item) => item.assigned_employee_id === user.id);
 }
 
 export async function getAdminTasks() {
@@ -301,7 +320,7 @@ export async function getAdminTasks() {
 }
 
 export function checklistsFor(user: Employee) {
-  return user.role === "admin" ? checklists : checklists.filter((item) => item.location_id === user.location_id);
+  return canUseAdminArea(user) ? checklists : checklists.filter((item) => item.location_id === user.location_id);
 }
 
 export function labelFor(status: string) {
