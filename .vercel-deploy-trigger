@@ -1,3 +1,2 @@
-Last manual Vercel deploy trigger: 2026-06-20 15:12 Europe/Berlin
-Reason: Force Vercel to pick up the route conflict fix and latest main branch.
-Includes route fix through commit 7acccae.
+Last manual Vercel deploy trigger: 2026-06-20 15:18 Europe/Berlin
+Reason: Refresh production deployment with the latest ready build state.
